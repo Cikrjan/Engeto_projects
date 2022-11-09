@@ -1,7 +1,7 @@
 /*
  * First table
  */
-CREATE TABLE IF NOT EXISTS t_payroll AS (
+CREATE OR REPLACE TABLE t_payroll AS (
 	SELECT cp.payroll_year AS Platy_rok, 
 		cpib.name AS Profesni_odvetvi, 
 		round(avg(cp.value)) AS Prumerny_plat
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS t_payroll AS (
 /*
  * Second table
  */
-CREATE TABLE IF NOT EXISTS t_food_prices AS (
+CREATE OR REPLACE TABLE t_food_prices AS (
 	SELECT 
 		cpc.name AS Kategorie_potravin, 
 		cp.value AS Cena, 
@@ -38,3 +38,19 @@ CREATE OR REPLACE TABLE t_jan_cikryt_project_SQL_primary_final AS (
 	JOIN t_food_prices tfp 
 		ON pr.Platy_rok = tfp.Potraviny_rok 
 );
+/*
+ * Answer to Q1
+ */
+SELECT 
+	Platy_rok ,
+	Profesni_odvetvi ,
+	Prumerny_plat 
+FROM t_jan_cikryt_project_sql_primary_final tjcpspf 
+GROUP BY Platy_rok, Profesni_odvetvi 
+ORDER BY Profesni_odvetvi, Platy_rok  
+;
+
+
+
+
+
