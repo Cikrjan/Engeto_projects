@@ -49,7 +49,18 @@ FROM t_jan_cikryt_project_sql_primary_final tjcpspf
 GROUP BY Platy_rok, Profesni_odvetvi 
 ORDER BY Profesni_odvetvi, Platy_rok  
 ;
-
+/*
+ * Answer to Q2
+ */
+SELECT
+	*,
+	round(Prumerny_plat/Cena) AS Dostupne_mnozstvi 
+FROM t_jan_cikryt_project_sql_primary_final tjcpspf
+WHERE Kategorie_potravin IN ('Mléko polotučné pasterované', 'Chléb konzumní kmínový')
+	AND Potraviny_rok IN (2006, 2018)
+GROUP BY Potraviny_rok, Profesni_odvetvi, Kategorie_potravin
+ORDER BY Profesni_odvetvi, Kategorie_potravin, Potraviny_rok
+;
 
 
 
