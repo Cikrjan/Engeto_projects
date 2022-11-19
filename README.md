@@ -2,6 +2,7 @@ Průvodní listina k SQL_project_1
 ===
 
 U výzkumné otázky číslo 2 se zkoumaly data z období roků 2006 až 2018, z důvodu absence dat v databázi cen potravin za období roků 2000 až 2005 a 2019 až 2021.
+ 
 
 Výzkumné otázky
  1.	Rostou v průběhu let mzdy ve všech odvětvích, nebo v některých klesají?
@@ -18,13 +19,19 @@ Odpovědi na výzkumné otázky
 	
  2.	Množství litrů mléka a kilogramů chleba za výše dané období je zobrazeno v posledním sloupci s názvem "Dostupne_mnozstvi".
 	Z tabulky lze vyčíst porovnání jaké pracovní odvětví si mohlo dovolit nakoupit jaké množství daného produktu v daném roce.
-
- 3.	
+Která kategorie potravin zdražuje nejpomaleji (je u ní nejnižší percentuální meziroční nárůst)?
+ 3.	Nejnižší percentuální meziroční nárůst má kategorie "Konzumní brambory" s hodnotou -44.27%.
+ 
+	U této otázky jsem vytvořil pomocnou tabulku, ve které jsem si pomocí funkce LEAD zobrazil roky 2007 - 2018. 
+	Sloučením této tabulky a tabulky t_jan_cikryt_project_sql_primary_final jsem v jednom řádku dostal rozdíl aktuálního a předchozího roku. 
+	Z toho bylo poté možné vypočítat percentilový meziroční nárůst. Poté jsem vytvořil VIEW, aby bylo možno s tímto výsledkem dále pracovat.
+	Nakonec jsem vyfiltroval minimální hodnotu ze všech kategorií potravin. 
+	Rok 2018 není relevantní pro výpočet, protože nejsou k dispozici ceny potravin z roku 2019.
  
  4.
  
  5.	Ne, růst HDP nemá vliv na změny ve mzdách a cenách potravin. 
-	Z uvedených dat lze vyčíst, že ve většině případech ikdyž HDP jeden rok poklesne, platy nebo ceny potravin si drží stejnou nebo dokonce vyšší hodnotu. 
+	Z uvedených dat lze vyčíst, že ve většině případů ikdyž HDP jeden rok poklesne, platy nebo ceny potravin si drží stejnou nebo dokonce vyšší hodnotu. 
 	Pokud bychom porovnali data v proůběhu let srovnávaného období, lze u všech tří měřených sloupců (mzdy, ceny potravin, HDP) vidět růst.
  
  
