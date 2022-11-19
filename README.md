@@ -18,7 +18,14 @@ Odpovědi na výzkumné otázky
 	
  2.	Množství litrů mléka a kilogramů chleba za výše dané období je zobrazeno v posledním sloupci s názvem "Dostupne_mnozstvi".
 	Z tabulky lze vyčíst porovnání jaké pracovní odvětví si mohlo dovolit nakoupit jaké množství daného produktu v daném roce.
-	
+
+ 3.	
+ 
+ 4.
+ 
+ 5.	Ne, růst HDP nemá vliv na změny ve mzdách a cenách potravin. 
+	Z uvedených dat lze vyčíst, že ve většině případech ikdyž HDP jeden rok poklesne, platy nebo ceny potravin si drží stejnou nebo dokonce vyšší hodnotu. 
+	Pokud bychom porovnali data v proůběhu let srovnávaného období, lze u všech tří měřených sloupců (mzdy, ceny potravin, HDP) vidět růst.
  
  
  
