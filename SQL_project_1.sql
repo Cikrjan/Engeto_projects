@@ -22,8 +22,7 @@ CREATE OR REPLACE TABLE t_food_prices AS (
 		cp.value AS Cena, 
 		cpc.price_value AS Mnozstvi_potraviny, 
 		cpc.price_unit AS Jednotka, 
-		YEAR(cp.date_from) AS Pot_rok_z,
-		YEAR(cp.date_to) AS Pot_rok_k
+		YEAR(cp.date_from) AS Potraviny_rok
 	FROM czechia_price cp 
 	JOIN czechia_price_category cpc 
 		ON cp.category_code = cpc.code 
@@ -48,7 +47,7 @@ CREATE OR REPLACE TABLE t_jan_cikryt_project_SQL_primary_final AS (
 	SELECT *
 	FROM t_payroll pr
 	JOIN t_food_prices tfp 
-		ON pr.Platy_rok = tfp.Pot_rok_z
+		ON pr.Platy_rok = tfp.Potraviny_rok
 	JOIN  t_gdp_cze tgc 
 		ON pr.Platy_rok = tgc.HDP_rok 
 );
@@ -92,18 +91,48 @@ SELECT
 	pt.Cena,
 	pt.Mnozstvi_potraviny,
 	pt.Jednotka,
-	pt.Pot_rok_z AS Pot_rok,
+	pt.Potraviny_rok,
 	round(Prumerny_plat/Cena) AS Dostupne_mnozstvi 
 FROM t_jan_cikryt_project_sql_primary_final pt
 WHERE Kategorie_potravin IN ('Mléko polotučné pasterované', 'Chléb konzumní kmínový')
-	AND Pot_rok_z IN (2006, 2018)
-GROUP BY pt.Pot_rok_z, pt.Profesni_odvetvi, pt.Kategorie_potravin
-ORDER BY pt.Profesni_odvetvi, pt.Kategorie_potravin, pt.Pot_rok_z
+	AND Potraviny_rok IN (2006, 2018)
+GROUP BY pt.Potraviny_rok, pt.Profesni_odvetvi, pt.Kategorie_potravin
+ORDER BY pt.Profesni_odvetvi, pt.Kategorie_potravin, pt.Potraviny_rok
 ;
 /*
  * Answer to Q3
  */
-
+CREATE OR REPLACE TABLE t_answer_three AS (
+	SELECT 
+		pt.Kategorie_potravin, 
+		pt.Potraviny_rok,
+		pt.Cena,
+		lead(pt.Cena,1) OVER (ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok) AS cena_rozdil
+	FROM t_jan_cikryt_project_sql_primary_final pt
+	GROUP BY pt.Potraviny_rok, pt.Kategorie_potravin
+	ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok 
+);
+CREATE OR REPLACE VIEW v_narust AS (
+	SELECT 
+		pt.Potraviny_rok, 
+		pt.Kategorie_potravin,
+		pt.Cena,
+		tat.cena_rozdil,
+		round(((tat.cena_rozdil-pt.Cena)/pt.Cena)*100,2) AS Percentualni_mezirocni_narust
+	FROM t_jan_cikryt_project_sql_primary_final pt
+	JOIN t_answer_three tat 
+		ON pt.Cena = tat.Cena
+	GROUP BY pt.Potraviny_rok, pt.Kategorie_potravin
+	ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok
+);
+SELECT
+	vn.Kategorie_potravin,
+	min(vn.Percentualni_mezirocni_narust) AS minimum
+FROM v_narust vn
+WHERE Potraviny_rok != 2018
+GROUP BY vn.Kategorie_potravin 
+ORDER BY minimum
+;
 /*
  * Answer to Q4
  */
