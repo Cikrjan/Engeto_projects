@@ -102,17 +102,19 @@ ORDER BY pt.Profesni_odvetvi, pt.Kategorie_potravin, pt.Potraviny_rok
 /*
  * Answer to Q3
  */
+-- Table with LEAD function
 CREATE OR REPLACE TABLE t_answer_three AS (
 	SELECT 
-		pt.Kategorie_potravin, 
 		pt.Potraviny_rok,
+		pt.Kategorie_potravin,
 		pt.Cena,
 		lead(pt.Cena,1) OVER (ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok) AS cena_rozdil
 	FROM t_jan_cikryt_project_sql_primary_final pt
 	GROUP BY pt.Potraviny_rok, pt.Kategorie_potravin
 	ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok 
 );
-CREATE OR REPLACE VIEW v_narust AS (
+-- VIEW contains calculation
+CREATE OR REPLACE VIEW v_potraviny_narust AS (
 	SELECT 
 		pt.Potraviny_rok, 
 		pt.Kategorie_potravin,
@@ -125,6 +127,7 @@ CREATE OR REPLACE VIEW v_narust AS (
 	GROUP BY pt.Potraviny_rok, pt.Kategorie_potravin
 	ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok
 );
+-- Final result
 SELECT
 	vn.Kategorie_potravin,
 	min(vn.Percentualni_mezirocni_narust) AS minimum
@@ -136,7 +139,45 @@ ORDER BY minimum
 /*
  * Answer to Q4
  */
-
+-- TABLE with LEAD function
+CREATE OR REPLACE TABLE t_answer_four AS (
+	SELECT 
+		pt.Platy_rok ,
+		pt.Profesni_odvetvi ,
+		pt.Prumerny_plat,
+		lead(pt.Prumerny_plat,1) OVER (ORDER BY pt.Profesni_odvetvi, pt.Platy_rok) AS platy_rozdil
+	FROM t_jan_cikryt_project_sql_primary_final pt 
+	GROUP BY pt.Platy_rok, pt.Profesni_odvetvi 
+	ORDER BY pt.Profesni_odvetvi, pt.Platy_rok  
+);
+-- VIEW contains calculation
+CREATE OR REPLACE VIEW v_platy_narust AS (
+	SELECT 
+		pt.Platy_rok ,
+		pt.Profesni_odvetvi ,
+		pt.Prumerny_plat,
+		taf.platy_rozdil,
+		round(((taf.platy_rozdil-pt.Prumerny_plat)/pt.Prumerny_plat)*100,2) AS Percentualni_mezirocni_narust_platu
+	FROM t_jan_cikryt_project_sql_primary_final pt
+	JOIN t_answer_four taf  
+		ON pt.Prumerny_plat = taf.Prumerny_plat 
+	GROUP BY pt.Platy_rok, pt.Profesni_odvetvi 
+	ORDER BY pt.Profesni_odvetvi, pt.Platy_rok
+);
+-- Final result
+SELECT 
+	vpn.Platy_rok,
+	vpn.Profesni_odvetvi,
+	vpn.Percentualni_mezirocni_narust_platu,
+	vpn2.Kategorie_potravin,
+	vpn2.Percentualni_mezirocni_narust,
+	vpn2.Percentualni_mezirocni_narust - vpn.Percentualni_mezirocni_narust_platu AS rozdil
+FROM v_platy_narust vpn 
+JOIN v_potraviny_narust vpn2 
+	ON vpn.Platy_rok = vpn2.Potraviny_rok 
+WHERE vpn.Platy_rok != 2018 AND vpn2.Potraviny_rok != 2018 AND vpn2.Percentualni_mezirocni_narust - vpn.Percentualni_mezirocni_narust_platu > 10
+ORDER BY rozdil DESC
+;
 /*
  * Answer to Q5
  */
