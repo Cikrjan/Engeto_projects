@@ -2,9 +2,9 @@
  * First primary table
  */
 CREATE OR REPLACE TABLE t_payroll AS (
-	SELECT cp.payroll_year AS Platy_rok, 
-		cpib.name AS Profesni_odvetvi, 
-		round(avg(cp.value)) AS Prumerny_plat
+	SELECT cp.payroll_year AS payroll_year, 
+		cpib.name AS work_branch, 
+		round(avg(cp.value)) AS average_payroll
 	FROM czechia_payroll cp 
 	JOIN czechia_payroll_industry_branch cpib 
 		ON cp.industry_branch_code = cpib.code 
@@ -18,24 +18,24 @@ CREATE OR REPLACE TABLE t_payroll AS (
  */
 CREATE OR REPLACE TABLE t_food_prices AS (
 	SELECT 
-		cpc.name AS Kategorie_potravin, 
-		cp.value AS Cena, 
-		cpc.price_value AS Mnozstvi_potraviny, 
-		cpc.price_unit AS Jednotka, 
-		YEAR(cp.date_from) AS Potraviny_rok
+		cpc.name AS food_category, 
+		round(avg(cp.value),1) AS average_price, 
+		cpc.price_value AS amount_of_food, 
+		cpc.price_unit AS price_unit, 
+		YEAR(cp.date_from) AS food_year
 	FROM czechia_price cp 
 	JOIN czechia_price_category cpc 
 		ON cp.category_code = cpc.code 
 	WHERE cp.region_code IS NULL
-	GROUP BY cp.date_from, cpc.name 
+	GROUP BY YEAR(cp.date_from), cpc.name 
 	ORDER BY cp.category_code, cp.date_from
 );
 /*
  * Third primary table
  */
 CREATE OR REPLACE TABLE t_gdp_cze AS (
-	SELECT e.GDP AS HDP,
-		e.`year` AS HDP_rok
+	SELECT e.GDP AS GDP,
+		e.`year` AS GDP_year
 	FROM economies e
 	WHERE e.country = 'Czech Republic'
 		AND e.`year` BETWEEN 2006 AND 2018
@@ -47,20 +47,20 @@ CREATE OR REPLACE TABLE t_jan_cikryt_project_SQL_primary_final AS (
 	SELECT *
 	FROM t_payroll pr
 	JOIN t_food_prices tfp 
-		ON pr.Platy_rok = tfp.Potraviny_rok
+		ON pr.payroll_year = tfp.food_year
 	JOIN  t_gdp_cze tgc 
-		ON pr.Platy_rok = tgc.HDP_rok 
+		ON pr.payroll_year = tgc.GDP_year 
 );
 /*
  * Create secondary_final table
  */
 CREATE OR REPLACE TABLE t_jan_cikryt_project_SQL_secondary_final AS (
 	SELECT 
-		e.country AS Stát,
-		e.`year` AS Rok,
-		e.GDP AS HDP,
+		e.country AS country,
+		e.`year` AS GDP_year,
+		e.GDP AS GDP,
 		e.gini AS GINI,
-		e.population AS Populace
+		e.population AS population
 	FROM countries c
 	JOIN economies e 
 		ON c.country = e.country 
@@ -73,31 +73,29 @@ CREATE OR REPLACE TABLE t_jan_cikryt_project_SQL_secondary_final AS (
  * Answer to Q1
  */
 SELECT 
-	pt.Platy_rok ,
-	pt.Profesni_odvetvi ,
-	pt.Prumerny_plat 
+	pt.payroll_year,
+	pt.work_branch,
+	pt.average_payroll 
 FROM t_jan_cikryt_project_sql_primary_final pt 
-GROUP BY pt.Platy_rok, pt.Profesni_odvetvi 
-ORDER BY pt.Profesni_odvetvi, pt.Platy_rok  
+GROUP BY pt.payroll_year, pt.work_branch 
+ORDER BY pt.work_branch, pt.payroll_year  
 ;
 /*
  * Answer to Q2
  */
 SELECT
-	pt.Platy_rok,
-	pt.Profesni_odvetvi,
-	pt.Prumerny_plat,
-	pt.Kategorie_potravin,
-	pt.Cena,
-	pt.Mnozstvi_potraviny,
-	pt.Jednotka,
-	pt.Potraviny_rok,
-	round(Prumerny_plat/Cena) AS Dostupne_mnozstvi 
+	pt.payroll_year,
+	pt.average_payroll,
+	pt.food_year,
+	pt.food_category,
+	pt.average_price,
+	pt.amount_of_food,
+	pt.price_unit,
+	round(avg(average_payroll)/avg(average_price)) AS available_quantity 
 FROM t_jan_cikryt_project_sql_primary_final pt
-WHERE Kategorie_potravin IN ('Mléko polotučné pasterované', 'Chléb konzumní kmínový')
-	AND Potraviny_rok IN (2006, 2018)
-GROUP BY pt.Potraviny_rok, pt.Profesni_odvetvi, pt.Kategorie_potravin
-ORDER BY pt.Profesni_odvetvi, pt.Kategorie_potravin, pt.Potraviny_rok
+WHERE food_category IN ('Mléko polotučné pasterované', 'Chléb konzumní kmínový')
+	AND food_year IN (2006, 2018)
+GROUP BY food_category, payroll_year
 ;
 /*
  * Answer to Q3
@@ -105,35 +103,35 @@ ORDER BY pt.Profesni_odvetvi, pt.Kategorie_potravin, pt.Potraviny_rok
 -- Table with LEAD function
 CREATE OR REPLACE TABLE t_answer_three AS (
 	SELECT 
-		pt.Potraviny_rok,
-		pt.Kategorie_potravin,
-		pt.Cena,
-		lead(pt.Cena,1) OVER (ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok) AS cena_rozdil
+		pt.food_year,
+		pt.food_category,
+		pt.average_price,
+		lead(pt.average_price,1) OVER (PARTITION BY pt.food_category ORDER BY pt.food_category, pt.food_year) AS price_diff
 	FROM t_jan_cikryt_project_sql_primary_final pt
-	GROUP BY pt.Potraviny_rok, pt.Kategorie_potravin
-	ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok 
+	GROUP BY pt.food_year, pt.food_category
+	ORDER BY pt.food_category, pt.food_year 
 );
 -- VIEW contains calculation
-CREATE OR REPLACE VIEW v_potraviny_narust AS (
+CREATE OR REPLACE VIEW v_food_growth AS (
 	SELECT 
-		pt.Potraviny_rok, 
-		pt.Kategorie_potravin,
-		pt.Cena,
-		tat.cena_rozdil,
-		round(((tat.cena_rozdil-pt.Cena)/pt.Cena)*100,2) AS Percentualni_mezirocni_narust
+		pt.food_year, 
+		pt.food_category,
+		pt.average_price,
+		tat.price_diff,
+		round(((tat.price_diff-pt.average_price)/pt.average_price)*100,2) AS percentage_yoy_growth
 	FROM t_jan_cikryt_project_sql_primary_final pt
 	JOIN t_answer_three tat 
-		ON pt.Cena = tat.Cena
-	GROUP BY pt.Potraviny_rok, pt.Kategorie_potravin
-	ORDER BY pt.Kategorie_potravin, pt.Potraviny_rok
+		ON pt.average_price = tat.average_price
+	GROUP BY pt.food_year, pt.food_category
+	ORDER BY pt.food_category, pt.food_year
 );
 -- Final result
 SELECT
-	vn.Kategorie_potravin,
-	min(vn.Percentualni_mezirocni_narust) AS minimum
-FROM v_narust vn
-WHERE Potraviny_rok != 2018
-GROUP BY vn.Kategorie_potravin 
+	vfg.food_category,
+	min(vfg.percentage_yoy_growth) AS minimum
+FROM v_food_growth vfg
+WHERE food_year != 2018
+GROUP BY vfg.food_category 
 ORDER BY minimum
 ;
 /*
@@ -142,54 +140,55 @@ ORDER BY minimum
 -- TABLE with LEAD function
 CREATE OR REPLACE TABLE t_answer_four AS (
 	SELECT 
-		pt.Platy_rok ,
-		pt.Profesni_odvetvi ,
-		pt.Prumerny_plat,
-		lead(pt.Prumerny_plat,1) OVER (ORDER BY pt.Profesni_odvetvi, pt.Platy_rok) AS platy_rozdil
+		pt.payroll_year,
+		pt.work_branch,
+		pt.average_payroll,
+		lead(pt.average_payroll,1) OVER (PARTITION BY pt.work_branch ORDER BY pt.work_branch, pt.payroll_year) AS payroll_diff
 	FROM t_jan_cikryt_project_sql_primary_final pt 
-	GROUP BY pt.Platy_rok, pt.Profesni_odvetvi 
-	ORDER BY pt.Profesni_odvetvi, pt.Platy_rok  
+	GROUP BY pt.payroll_year, pt.work_branch 
+	ORDER BY pt.work_branch, pt.payroll_year  
 );
 -- VIEW contains calculation
-CREATE OR REPLACE VIEW v_platy_narust AS (
+CREATE OR REPLACE VIEW v_payroll_growth AS (
 	SELECT 
-		pt.Platy_rok ,
-		pt.Profesni_odvetvi ,
-		pt.Prumerny_plat,
-		taf.platy_rozdil,
-		round(((taf.platy_rozdil-pt.Prumerny_plat)/pt.Prumerny_plat)*100,2) AS Percentualni_mezirocni_narust_platu
+		pt.payroll_year ,
+		pt.work_branch ,
+		pt.average_payroll,
+		taf.payroll_diff,
+		round(((taf.payroll_diff-pt.average_payroll)/pt.average_payroll)*100,2) AS percentage_yoy_payroll_growth
 	FROM t_jan_cikryt_project_sql_primary_final pt
 	JOIN t_answer_four taf  
-		ON pt.Prumerny_plat = taf.Prumerny_plat 
-	GROUP BY pt.Platy_rok, pt.Profesni_odvetvi 
-	ORDER BY pt.Profesni_odvetvi, pt.Platy_rok
+		ON pt.average_payroll = taf.average_payroll 
+	GROUP BY pt.payroll_year, pt.work_branch 
+	ORDER BY pt.work_branch, pt.payroll_year
 );
 -- Final result
 SELECT 
-	vpn.Platy_rok,
-	vpn.Profesni_odvetvi,
-	vpn.Percentualni_mezirocni_narust_platu,
-	vpn2.Kategorie_potravin,
-	vpn2.Percentualni_mezirocni_narust,
-	vpn2.Percentualni_mezirocni_narust - vpn.Percentualni_mezirocni_narust_platu AS rozdil
-FROM v_platy_narust vpn 
-JOIN v_potraviny_narust vpn2 
-	ON vpn.Platy_rok = vpn2.Potraviny_rok 
-WHERE vpn.Platy_rok != 2018 AND vpn2.Potraviny_rok != 2018 AND vpn2.Percentualni_mezirocni_narust - vpn.Percentualni_mezirocni_narust_platu > 10
-ORDER BY rozdil DESC
+	vpg.payroll_year,
+	vpg.work_branch,
+	vpg.percentage_yoy_payroll_growth,
+	vfg.food_category,
+	vfg.percentage_yoy_growth,
+	vfg.percentage_yoy_growth - vpg.percentage_yoy_payroll_growth AS diff
+FROM v_payroll_growth vpg 
+JOIN v_food_growth vfg 
+	ON vpg.payroll_year = vfg.food_year 
+WHERE vpg.payroll_year != 2018 AND vfg.food_year != 2018 AND vfg.percentage_yoy_growth - vpg.percentage_yoy_payroll_growth > 10
+GROUP BY payroll_year
+ORDER BY payroll_year, diff DESC 
 ;
 /*
  * Answer to Q5
  */
 SELECT 
-	pt.Platy_rok,
-	pt.Profesni_odvetvi,
-	pt.Prumerny_plat,
-	pt.Kategorie_potravin,
-	pt.Cena,
-	pt.Mnozstvi_potraviny,
-	pt.Jednotka,
-	pt.HDP
+	pt.payroll_year,
+	pt.work_branch,
+	pt.average_payroll,
+	pt.food_category,
+	pt.average_price,
+	pt.amount_of_food,
+	pt.price_unit,
+	pt.GDP
 FROM t_jan_cikryt_project_sql_primary_final pt
-GROUP BY Profesni_odvetvi, Kategorie_potravin, HDP_rok 
+GROUP BY work_branch, food_category, GDP_year 
 ;
