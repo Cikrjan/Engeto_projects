@@ -14,13 +14,14 @@ Výzkumné otázky
 	
 Odpovědi na výzkumné otázky
  1.	V žádném odvětví v průběhu let mzdy nerostou bez jakékoliv výkyvu.
+ 
 	Nejblíže tomu je odvětví Zemědělství, lesnictví, rybářství, kde se vyskytují jen dva propady mezd a to v roce 2011 a 2017.
 	Pokud bychom porovnali přímo mzdy z počátečního a koncového roku, lze vidět růst ve všech odvětví.
 	
- 2.	Množství litrů mléka a kilogramů chleba za výše dané období je zobrazeno v posledním sloupci s názvem "Dostupne_mnozstvi".
-	Z tabulky lze vyčíst porovnání jaké pracovní odvětví si mohlo dovolit nakoupit jaké množství daného produktu v daném roce.
+ 2.	V roce 2006, tedy v prvním srovnatelném období, bylo možné koupit 1203 kilogramů chleba a 1345 litrů mléka. 
+	V roce 2018, tedy v posledním srovnatelném období, bylo možné koupit 1252 kilogramů chleba a 1531 litrů mléka.
 
- 3.	Nejnižší percentuální meziroční nárůst má kategorie "Konzumní brambory" s hodnotou -44.27%.
+ 3.	Nejnižší percentuální meziroční nárůst má kategorie "Rajská jablka červená kulatá" s hodnotou -30,28%.
  
 	U této otázky jsem vytvořil pomocnou tabulku, ve které jsem si pomocí funkce LEAD zobrazil roky 2007 - 2018. 
 	Sloučením této tabulky a tabulky t_jan_cikryt_project_sql_primary_final jsem v jednom řádku dostal rozdíl aktuálního a předchozího roku. 
@@ -32,9 +33,9 @@ Odpovědi na výzkumné otázky
  
 	U této otázky jsem postupoval obdobně jako u otázky č. 3, s tím, že jsem si navíc vytvořil VIEW s meziročním růstem mezd, který jsem následně spojil s VIEW obsahující meziroční růst cen potravin.
 	Z tohoto pak bylo možné zobrazit žádaný desetiprocentní rozdíl.
-	Abych zjistil, které roky jsou zahrnuty ve výběru, rozšířil jsem script o GROUP BY Platy_rok.
  
  5.	Ne, růst HDP nemá vliv na změny ve mzdách a cenách potravin. 
+ 
 	Z uvedených dat lze vyčíst, že ve většině případů ikdyž HDP jeden rok poklesne, platy nebo ceny potravin si drží stejnou nebo dokonce vyšší hodnotu. 
 	Pokud bychom porovnali data v proůběhu let srovnávaného období, lze u všech tří měřených sloupců (mzdy, ceny potravin, HDP) vidět růst.
  
