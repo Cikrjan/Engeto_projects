@@ -4,11 +4,12 @@
 CREATE OR REPLACE TABLE t_payroll AS (
 	SELECT cp.payroll_year AS payroll_year, 
 		cpib.name AS work_branch, 
-		round(avg(cp.value)) AS average_payroll
+		ROUND(AVG(cp.value)) AS average_payroll,
+		value_type_code 
 	FROM czechia_payroll cp 
 	JOIN czechia_payroll_industry_branch cpib 
 		ON cp.industry_branch_code = cpib.code 
-	WHERE cp.value IS NOT NULL
+	WHERE cp.value IS NOT NULL AND value_type_code = 5958
 		AND cp.payroll_year BETWEEN 2006 AND 2018
 	GROUP BY cp.payroll_year, cpib.name
 	ORDER BY cpib.code, cp.payroll_year 
@@ -19,7 +20,7 @@ CREATE OR REPLACE TABLE t_payroll AS (
 CREATE OR REPLACE TABLE t_food_prices AS (
 	SELECT 
 		cpc.name AS food_category, 
-		round(avg(cp.value),1) AS average_price, 
+		ROUND(AVG(cp.value),1) AS average_price, 
 		cpc.price_value AS amount_of_food, 
 		cpc.price_unit AS price_unit, 
 		YEAR(cp.date_from) AS food_year
@@ -72,12 +73,27 @@ CREATE OR REPLACE TABLE t_jan_cikryt_project_SQL_secondary_final AS (
 /*
  * Answer to Q1
  */
+CREATE OR REPLACE VIEW v_answer_one AS (
+	SELECT
+		pt.average_payroll,
+		LEAD(pt.average_payroll,1) OVER (PARTITION BY pt.work_branch ORDER BY pt.work_branch, pt.payroll_year) AS payroll_diff
+	FROM t_jan_cikryt_project_sql_primary_final pt 
+	GROUP BY pt.payroll_year, pt.work_branch 
+	ORDER BY pt.work_branch, pt.payroll_year  
+);
 SELECT 
 	pt.payroll_year,
 	pt.work_branch,
-	pt.average_payroll 
+	pt.average_payroll,
+	vao.payroll_diff,
+	CASE 
+		WHEN vao.payroll_diff > pt.average_payroll THEN	'stoupá'
+		ELSE 'klesá'
+	END AS rise_fall
 FROM t_jan_cikryt_project_sql_primary_final pt 
-GROUP BY pt.payroll_year, pt.work_branch 
+JOIN v_answer_one vao
+	ON	pt.average_payroll = vao.average_payroll
+GROUP BY pt.payroll_year, pt.work_branch
 ORDER BY pt.work_branch, pt.payroll_year  
 ;
 /*
@@ -91,7 +107,7 @@ SELECT
 	pt.average_price,
 	pt.amount_of_food,
 	pt.price_unit,
-	round(avg(average_payroll)/avg(average_price)) AS available_quantity 
+	ROUND(AVG(average_payroll)/AVG(average_price)) AS available_quantity 
 FROM t_jan_cikryt_project_sql_primary_final pt
 WHERE food_category IN ('Mléko polotučné pasterované', 'Chléb konzumní kmínový')
 	AND food_year IN (2006, 2018)
@@ -106,7 +122,7 @@ CREATE OR REPLACE TABLE t_answer_three AS (
 		pt.food_year,
 		pt.food_category,
 		pt.average_price,
-		lead(pt.average_price,1) OVER (PARTITION BY pt.food_category ORDER BY pt.food_category, pt.food_year) AS price_diff
+		LEAD(pt.average_price,1) OVER (PARTITION BY pt.food_category ORDER BY pt.food_category, pt.food_year) AS price_diff
 	FROM t_jan_cikryt_project_sql_primary_final pt
 	GROUP BY pt.food_year, pt.food_category
 	ORDER BY pt.food_category, pt.food_year 
@@ -118,7 +134,7 @@ CREATE OR REPLACE VIEW v_food_growth AS (
 		pt.food_category,
 		pt.average_price,
 		tat.price_diff,
-		round(((tat.price_diff-pt.average_price)/pt.average_price)*100,2) AS percentage_yoy_growth
+		ROUND(((tat.price_diff-pt.average_price)/pt.average_price)*100,2) AS percentage_yoy_growth
 	FROM t_jan_cikryt_project_sql_primary_final pt
 	JOIN t_answer_three tat 
 		ON pt.average_price = tat.average_price
@@ -128,7 +144,7 @@ CREATE OR REPLACE VIEW v_food_growth AS (
 -- Final result
 SELECT
 	vfg.food_category,
-	min(vfg.percentage_yoy_growth) AS minimum
+	MIN(vfg.percentage_yoy_growth) AS minimum
 FROM v_food_growth vfg
 WHERE food_year != 2018
 GROUP BY vfg.food_category 
@@ -143,7 +159,7 @@ CREATE OR REPLACE TABLE t_answer_four AS (
 		pt.payroll_year,
 		pt.work_branch,
 		pt.average_payroll,
-		lead(pt.average_payroll,1) OVER (PARTITION BY pt.work_branch ORDER BY pt.work_branch, pt.payroll_year) AS payroll_diff
+		LEAD(pt.average_payroll,1) OVER (PARTITION BY pt.work_branch ORDER BY pt.work_branch, pt.payroll_year) AS payroll_diff
 	FROM t_jan_cikryt_project_sql_primary_final pt 
 	GROUP BY pt.payroll_year, pt.work_branch 
 	ORDER BY pt.work_branch, pt.payroll_year  
@@ -155,7 +171,7 @@ CREATE OR REPLACE VIEW v_payroll_growth AS (
 		pt.work_branch ,
 		pt.average_payroll,
 		taf.payroll_diff,
-		round(((taf.payroll_diff-pt.average_payroll)/pt.average_payroll)*100,2) AS percentage_yoy_payroll_growth
+		ROUND(((taf.payroll_diff-pt.average_payroll)/pt.average_payroll)*100,2) AS percentage_yoy_payroll_growth
 	FROM t_jan_cikryt_project_sql_primary_final pt
 	JOIN t_answer_four taf  
 		ON pt.average_payroll = taf.average_payroll 
