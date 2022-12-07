@@ -13,13 +13,10 @@ Výzkumné otázky
 	projeví se to na cenách potravin či mzdách ve stejném nebo násdujícím roce výraznějším růstem?
 	
 Odpovědi na výzkumné otázky
- 1.	V žádném odvětví v průběhu let mzdy nerostou bez jakékoliv výkyvu.
- 
-	Nejblíže tomu je odvětví Zemědělství, lesnictví, rybářství, kde se vyskytují jen dva propady mezd a to v roce 2011 a 2017.
-	Pokud bychom porovnali přímo mzdy z počátečního a koncového roku, lze vidět růst ve všech odvětví.
-	
- 2.	V roce 2006, tedy v prvním srovnatelném období, bylo možné koupit 1203 kilogramů chleba a 1345 litrů mléka. 
-	V roce 2018, tedy v posledním srovnatelném období, bylo možné koupit 1252 kilogramů chleba a 1531 litrů mléka.
+ 1.	V odvětví "Doprava a skladování", "Ostatní činnosti", "Zdravotní a sociální péče" a "Zpracovatelský průmysl" rostou mzdy v průběhu období bez jakékoliv výkyvu.
+ 	
+ 2.	V roce 2006, tedy v prvním srovnatelném období, bylo možné koupit 1289 kilogramů chleba a 1441 litrů mléka. 
+	V roce 2018, tedy v posledním srovnatelném období, bylo možné koupit 1344 kilogramů chleba a 1643 litrů mléka.
 
  3.	Nejnižší percentuální meziroční nárůst má kategorie "Rajská jablka červená kulatá" s hodnotou -30,28%.
  
@@ -29,7 +26,7 @@ Odpovědi na výzkumné otázky
 	Nakonec jsem vyfiltroval minimální hodnotu ze všech kategorií potravin. 
 	Rok 2018 není relevantní pro výpočet, protože nejsou k dispozici ceny potravin z roku 2019.
  
- 4.	V každém roce nalezneme meziroční růst potravin, který je výrazně vyšší než meziroční růst mezd (větší než 10%). 
+ 4.	V každém roce, kromě roku 2015, nalezneme meziroční růst potravin, který je výrazně vyšší než meziroční růst mezd (větší než 10%). 
  
 	U této otázky jsem postupoval obdobně jako u otázky č. 3, s tím, že jsem si navíc vytvořil VIEW s meziročním růstem mezd, který jsem následně spojil s VIEW obsahující meziroční růst cen potravin.
 	Z tohoto pak bylo možné zobrazit žádaný desetiprocentní rozdíl.
