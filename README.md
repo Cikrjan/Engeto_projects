@@ -26,7 +26,7 @@ Odpovědi na výzkumné otázky
 	Nakonec jsem vyfiltroval minimální hodnotu ze všech kategorií potravin. 
 	Rok 2018 není relevantní pro výpočet, protože nejsou k dispozici ceny potravin z roku 2019.
  
- 4.	V každém roce, kromě roku 2015, nalezneme meziroční růst potravin, který je výrazně vyšší než meziroční růst mezd (větší než 10%). 
+ 4.	V každém roce nalezneme meziroční růst potravin, který je výrazně vyšší než meziroční růst mezd (větší než 10%). 
  
 	U této otázky jsem postupoval obdobně jako u otázky č. 3, s tím, že jsem si navíc vytvořil VIEW s meziročním růstem mezd, který jsem následně spojil s VIEW obsahující meziroční růst cen potravin.
 	Z tohoto pak bylo možné zobrazit žádaný desetiprocentní rozdíl.
